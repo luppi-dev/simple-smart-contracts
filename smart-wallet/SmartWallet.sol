@@ -62,22 +62,31 @@ contract SmartWallet {
         }
     }
 
-    function transfer(address payable _to, uint _amount, bytes memory _payload) public returns(bytes memory) {
+    // Transfer ETH
+    function transfer(
+        address payable _to, 
+        uint _amount, 
+        bytes memory _payload
+    ) public returns(bytes memory) {
 
         if(msg.sender != owner) {
-            require(allowance[msg.sender] >= _amount, "You are trying to send more than you are allowed to.");
-            require(isAllowedToSend[msg.sender], "Not allowed to send anything from this smart contract");
-
+            allowanceRequires(_amount);
             allowance[msg.sender] -= _amount;
         }
 
         (bool success, bytes memory data) = _to.call{value: _amount}(_payload);
         require(success, "Call was not successful");
+        
         return data;
     }
     
     function onlyOwnerOperation() private view {
         require(msg.sender == owner, "Only the guardian owner can access this operation.");
+    }
+
+    function allowanceRequires(uint _amount) private view {
+       require(allowance[msg.sender] >= _amount, "You are trying to send more than you are allowed to.");
+        require(isAllowedToSend[msg.sender], "Not allowed to send anything from this smart contract"); 
     }
 
     receive() external payable {} // receives ETH, can only be accessed only outside of this contract
